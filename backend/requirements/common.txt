@@ -1,0 +1,15 @@
+alembic
+dominate
+Flask
+Flask-HTTPAuth
+Flask-Login
+Flask-Mail
+Flask-Migrate
+Flask-Moment
+Flask-SQLAlchemy
+itsdangerous
+python-dateutil
+six
+SQLAlchemy
+Werkzeug
+faker
