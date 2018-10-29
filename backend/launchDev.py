@@ -5,7 +5,7 @@ from app.models import User, SpecialData, Text, Picture
 import os
 from app import faker
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+app = create_app('default')
 migrate = Migrate(app, db)
 
 app.app_context().push()

@@ -2,7 +2,6 @@ alembic
 dominate
 Flask
 Flask-HTTPAuth
-Flask-Login
 Flask-Mail
 Flask-Migrate
 Flask-Moment

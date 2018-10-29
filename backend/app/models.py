@@ -3,11 +3,10 @@ import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request, url_for
-from flask_login import UserMixin
-from . import db, loginManager
+from . import db
 
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     '''用户数据表'''
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -54,11 +53,6 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return "<User %r>" % self.username
-
-
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
 
 
 class SpecialData(db.Model):
