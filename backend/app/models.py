@@ -4,14 +4,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request, url_for
 from flask_login import UserMixin
-from . import db, login_manager
+from . import db, loginManager
 
 
 class User(UserMixin, db.Model):
     '''用户数据表'''
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    email = dv.Column(db.String(64), unique=True, index=True)
+    email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
     # confirmed = db.Column(db.Boolean, default=False)
@@ -65,9 +65,9 @@ class SpecialData(db.Model):
     '''个性数据'''
     __tablename__ = "specialDatas"
     id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    uri = db.Column(db.String(64))
+    headuri = db.Column(db.String(64))
     tags = db.Column(db.String(128))
-    background = db.Column(db.Integer)
+    bguri = db.Column(db.String(64))
 
     def __init__(self):
         pass
@@ -80,7 +80,7 @@ class Text(db.Model):
     strType = db.Column(db.Integer)
     tag = db.Column(db.String(64))
     createdTime = db.Column(db.DateTime(), default=datetime.utcnow)
-    content = db.Column(db.Text())
+    content = db.Column(db.String(64))
 
     def __init__(self):
         pass
@@ -91,7 +91,7 @@ class Picture(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uri = db.Column(db.String(64), unique=True)
     tag = db.Column(db.Integer)
-    desc = db.Column(db.Text(), default="")
+    desc = db.Column(db.String(128), default="")
 
     def __init__(self):
         pass
