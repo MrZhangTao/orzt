@@ -40,4 +40,37 @@
                 数据库备份变的巨大，越来越耗时间
                 对文件的访问需要穿越你的应用层和数据库层
 
+在flask中使用mysql数据库，（使用python3）
+        首先需要安装pymysql支持，
+        然后在配置表config.py里如下设置：
+        SQLALCHEMY_DATABASE_URI = "mysql+pymysql://username:yourpassword@address:3306/orzt"
+        
 ----2018年10月29日11:10:29 v0.3----
+
+对于flask的HTTP请求上的认证，一般使用Flask-Login扩展来实现用户认证，
+但是如果是Restful API请求的认证，另当别论
+        REST系统六条设计规范其中之一提到了：
+        => 无状态 => 每个请求必须包含完成请求必需的信息，
+                两次请求之间没有任何相关性，是完全独立的
+所以此时的用户认证使用Flask-HTTPAuth扩展是不错的选择(可能还存在其他方法)
+
+----2018年10月30日09:53:53 v0.4----
+
+POSTMAN 使用这个工具来测试接口，更加便捷
+
+----2018年10月30日17:43:21 v0.5----
+
+Flask-RESTful扩展提供了一个RequestParser类来处理数据验证
+from flask_restful import reqparse
+reqparser = reqparse.RequestParser() # create a instance
+
+POST 和 PUT 方法 是需要接收参数的:
+reqparser.add_argument("argName",
+                        type=typeName,
+                        location=locationName, # 默认是values,在本项目中应为json
+                        required=True, # 如果必须要，就加上该关键字参数
+                        default=defVal,
+                        help="if this arg does not exist, " # 缺少提示
+                        "you will get this msg")
+
+----2018年10月30日18:06:31 v0.6----

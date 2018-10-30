@@ -10,8 +10,8 @@ migrate = Migrate(app, db)
 
 app.app_context().push()
 db.create_all() # create all tables
-faker.users(10)
-faker.specialData(10)
+# faker.users(10)
+# faker.specialData()
 faker.texts(10)
 faker.pictures(10)
 app.run()

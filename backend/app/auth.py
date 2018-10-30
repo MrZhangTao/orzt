@@ -26,8 +26,8 @@ def verify_password(email, password):
 def auth_error():
     return errorResponse("Invalid credentials", 403)
 
-@api.before_request
-@auth.login_required
-def before_request():
-    if not g.current_user:
-        return errorResponse("Not logined", 403)
+# @api.before_request
+# @auth.login_required
+# def before_request():
+#     if not g.current_user:
+#         return errorResponse("Not logined", 403)
