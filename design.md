@@ -74,3 +74,21 @@ reqparser.add_argument("argName",
                         "you will get this msg")
 
 ----2018年10月30日18:06:31 v0.6----
+
+MYSQL的分页查询是使用关键字: LIMIT offsetN, selectN
+        select * from users limit 10, 10;
+
+JSON Web Token(缩写JWT) 是一种流行的跨域认证解决方案的产物，这个字符串由服务端生成并返回给客户端保存
+进入小程序时，先在本地读取Token，如果没有或者已过期，则引导跳转至登录/注册页面，
+        login时返回一个Token，客户端保存/更新
+        logout成功时，客户端注销该Token
+        此后的通信中，都需要加上该Token:
+                1.附加在参数中；
+                2.加在HTTP Header的Authorization字段中
+Token有很多种方式来实现，其根本目的是使认证更加安全
+
+贴上一则博客: 使用Flask设计带认证token的RESTful_API接口https://www.cnblogs.com/vovlie/p/4182814.html
+
+----2018年10月31日16:17:17 v0.7----
+
+

@@ -13,3 +13,4 @@ SQLAlchemy
 Werkzeug
 faker
 Flask-RESTful
+

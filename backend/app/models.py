@@ -2,6 +2,7 @@ from datetime import datetime
 import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import SignatureExpired, BadSignature
 from flask import current_app, request, url_for
 from . import db
 
@@ -43,6 +44,24 @@ class User(db.Model):
         '''update last_logined val'''
         self.last_logined = datetime.utcnow()
         db.session.add(self)
+
+    def generate_auth_token(self, expiration=600):
+        '''generate a auth token'''
+        s = Serializer(current_app.config["SECRET_KEY"], expires_in=expiration)
+        return s.dumps({"id": self.id}).decode("utf-8")
+
+    @staticmethod
+    def verify_auth_token(token):
+        '''verify token is valid and return a user by token'''
+        s = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            data = s.loads(token)
+        except SignatureExpired as e:
+            return None # valid token, but expired
+        except BadSignature as e:
+            return None # invalid token
+        user = User.query.get(data["id"])
+        return user
 
     def to_json(self):
         json_user = {
