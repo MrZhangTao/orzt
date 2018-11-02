@@ -41,7 +41,7 @@ def specialData():
     db.session.commit()
 
 def texts(count=10):
-    pass
+    print("ssssss")
 
 def pictures(count=10):
     pass

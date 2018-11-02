@@ -65,7 +65,7 @@ class User(db.Model):
 
     def to_json(self):
         json_user = {
-            "uri": url_for("user", id=self.id),
+            "uri": url_for("/api/v1/users/<int:id>", id=self.id),
             "username": self.username,
             "name": self.name,
             "sex": self.sex,

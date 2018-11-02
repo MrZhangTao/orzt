@@ -14,7 +14,6 @@ def errorResponse(message, status_code):
 # 注册验证函数，用于auth的login_required装饰器
 @auth.verify_password
 def verify_password(email_or_token, password):
-    print(email_or_token, password, "KKKKKK")
     if email_or_token == "":
         return False
     # first try to authenticate by token
