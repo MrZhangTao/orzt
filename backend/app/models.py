@@ -6,6 +6,11 @@ from itsdangerous import SignatureExpired, BadSignature
 from flask import current_app, request, url_for
 from . import db
 
+# sqlalchemy库中声明了orm支持的列类型
+# 可以通过sqlalchemy的实例db来使用(这是一种方式)
+
+# 文档资料
+# https: // xintiaohuiyi.gitbook.io/flask-note/4flaskshu-ju-ku/58-duo-dui-duo-guan-xi-shi-xian
 
 class User(db.Model):
     '''用户数据表'''

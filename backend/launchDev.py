@@ -11,7 +11,8 @@ if __name__ == "__main__":
     migrate = Migrate(app, db)
 
     app.app_context().push()
-    db.create_all() # create all tables
+    # 一旦使用"create_all()"将模型映射到数据库中后，即使改变了模型的字段，也不会重新映射了
+    db.create_all()  # 创建表，将模型映射到数据库中
     # faker.users(10)
     # faker.specialData()
     faker.texts(10)
