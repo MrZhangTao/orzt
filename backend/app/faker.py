@@ -8,13 +8,12 @@ from .models import User, ExtraInfo, Record, Picture
 def users(count=10):
     faker = Faker("zh_CN")
     idx = 0
-    while idx < count:
+    while idx < 10:
         # user
         user = User(
-            telephone=str(faker.phone_number()),
+            telephone=faker.phone_number(),
             password="password",
             username=faker.user_name(),
-            name=faker.name(),
             sex=randint(0, 1),
             location=faker.city_name(),
         )
@@ -22,11 +21,12 @@ def users(count=10):
         try:
             db.session.commit()
             print(user)
-            idx += 1
         except IntegrityError as e:
             print("error :=> db.session.rollback()")
             db.session.rollback()
-    # __extrainfo()
+        idx += 1
+
+    __extrainfo()
 
 def __extrainfo():
     faker = Faker("zh_CN")

@@ -17,10 +17,10 @@ class User(db.Model):
 
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     telephone = db.Column(db.String(11), unique=True, index=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(128))
     username = db.Column(db.String(64), nullable=False)
     sex = db.Column(db.Integer, nullable=False) # 0是女性，1是男性
-    location = db.Column(db.String(128), default="四川-成都")
+    location = db.Column(db.String(128), default="四川-成都", nullable=False)
 
     register_time = db.Column(db.DateTime(),
                               default=datetime.utcnow, nullable=False)
@@ -32,55 +32,26 @@ class User(db.Model):
     pictures = db.relationship("Picture", backref="user", lazy="dynamic")
 
     def __init__(self, *args, **kw):
-        pass
+        super().__init__(*args, **kw)
 
     def __repr__(self):
         return "<<User: %r>>" % self.to_json()
 
     def to_json(self):
         '''transform'''
+        extrainfo = {}
+        if self.extrainfo is not None:
+            extrainfo = self.extrainfo.to_json()
+
         return {
             "user_id": self.user_id,
             "telephone": self.telephone,
             "username": self.username,
             "sex": self.sex,
             "location": self.location,
-            "extrainfo": self.extrainfo.to_json(),
-        }
-
-class ExtraInfo(db.Model):
-    __tablename__ = "extrainfos"
-
-    info_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
-    birth = db.Column(db.Integer)
-    lefttime = db.Column(db.Integer, default=77)
-    headuri = db.Column(db.String(128), default="")
-    bguri = db.Column(db.String(128), default="")
-    tags = db.Column(db.String(128), default="")
-    about_me = db.Column(db.String(512), default="")
-    user = db.relationship("User", uselist=False)
-
-    def __init__(self, *args, **kw):
-        pass
-
-    def __repr__(self):
-        # %r used in repr is right
-        return "<<ExtraInfo: %r>>" % self.to_json()
-
-    def to_json(self):
-        '''transform'''
-        return {
-            "info_id": self.info_id,
-            "user_id": self.user_id,
-            "age": self.age,
-            "birth": self.birth,
-            "lefttime": self.lefttime,
-            "headuri": self.headuri,
-            "bguri": self.bguri,
-            "tags": self.tags,
             "register_time": self.register_time,
             "last_logined": self.last_logined,
+            "extrainfo": extrainfo,
         }
 
     @property
@@ -113,6 +84,38 @@ class ExtraInfo(db.Model):
         user = User.query.get(data["user_id"])
         return user
 
+class ExtraInfo(db.Model):
+    __tablename__ = "extrainfos"
+
+    info_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    birth = db.Column(db.DateTime())
+    lefttime = db.Column(db.Integer, default=77)
+    headuri = db.Column(db.String(128), default="")
+    bguri = db.Column(db.String(128), default="")
+    tags = db.Column(db.String(128), default="")
+    about_me = db.Column(db.String(512), default="")
+    user = db.relationship("User", uselist=False)
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+
+    def __repr__(self):
+        # %r used in repr is right
+        return "<<ExtraInfo: %r>>" % self.to_json()
+
+    def to_json(self):
+        '''transform'''
+        return {
+            "info_id": self.info_id,
+            "user_id": self.user_id,
+            "birth": self.birth,
+            "lefttime": self.lefttime,
+            "headuri": self.headuri,
+            "bguri": self.bguri,
+            "tags": self.tags
+        }
+
 
 class Record(db.Model):
     __tablename__ = "records"
@@ -127,7 +130,7 @@ class Record(db.Model):
     tags = db.Column(db.String(128), default="")
 
     def __init__(self, *args, **kw):
-        pass
+        super().__init__(*args, **kw)
 
     def __repr__(self):
         return "<<Record: %r>>" % self.to_json()
@@ -138,6 +141,7 @@ class Record(db.Model):
             "record_id": self.record_id,
             "user_id": self.user_id,
             "create_time": self.create_time,
+            "where": self.where,
             "content": self.content,
             "texturi": self.texturi,
             "pic_uri": self.pic_uri,
@@ -154,6 +158,16 @@ class Picture(db.Model):
     tags = db.Column(db.String(128), default="")
 
     def __init__(self, *args, **kw):
-        pass
+        super().__init__(*args, **kw)
+
+    def to_json(self):
+        '''transform'''
+        return {
+            "pic_id": self.pic_id,
+            "user_id": self.user_id,
+            "create_time": self.create_time,
+            "uri": self.uri,
+            "tags": self.tags
+        }
 
 
