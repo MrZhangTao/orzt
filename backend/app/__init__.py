@@ -33,8 +33,8 @@ def create_app(configname):
     # add_resource 函数使用指定的endpoint注册路由到框架上，如果没有指定端点，flask-restful会根据类名生成一个
     api.add_resource(v1.Users, v1.Users.uri, endpoint=v1.Users.endpoint)
     api.add_resource(v1.OneUser, v1.OneUser.uri, endpoint=v1.OneUser.endpoint)
-    api.add_resource(v1.Tokens, v1.Tokens.uri, endpoint=v1.Tokens.endpoint)
-    api.add_resource(v1.OneToken, v1.OneToken.uri, endpoint=v1.OneToken.endpoint)
+    # api.add_resource(v1.Tokens, v1.Tokens.uri, endpoint=v1.Tokens.endpoint)
+    # api.add_resource(v1.OneToken, v1.OneToken.uri, endpoint=v1.OneToken.endpoint)
     from .auth import auth
 
     # 每次请求前进行安全验证

@@ -13,14 +13,14 @@ def errorResponse(message, status_code):
 
 # 注册验证函数，用于auth的login_required装饰器
 @auth.verify_password
-def verify_password(email_or_token, password):
-    if email_or_token == "":
+def verify_password(phone_or_token, password):
+    if phone_or_token == "":
         return False
     # first try to authenticate by token
-    user = User.verify_auth_token(email_or_token)
+    user = User.verify_auth_token(phone_or_token)
     if not user:
-        # try to authenticate with email/password
-        user = User.query.filter_by(email=email_or_token).first()
+        # try to authenticate with telephone/password
+        user = User.query.filter_by(telephone=phone_or_token).first()
         if not user or not user.verify_password(password):
             return False
     g.user = user # save user to the app context--g

@@ -2,46 +2,53 @@ from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
 from . import db
-from .models import User, SpecialData, Text, Picture
+from .models import User, ExtraInfo, Record, Picture
 
 '''数据伪造'''
 def users(count=10):
-    faker = Faker()
+    faker = Faker("zh_CN")
     idx = 0
     while idx < count:
+        # user
         user = User(
-            email=faker.email(),
-            username=faker.user_name(),
+            telephone=str(faker.phone_number()),
             password="password",
+            username=faker.user_name(),
             name=faker.name(),
             sex=randint(0, 1),
-            location=faker.city(),
-            about_me=faker.text(),
-            last_logined = faker.past_date(),
+            location=faker.city_name(),
         )
         db.session.add(user)
         try:
             db.session.commit()
+            print(user)
             idx += 1
         except IntegrityError as e:
+            print("error :=> db.session.rollback()")
             db.session.rollback()
+    # __extrainfo()
 
-def specialData():
-    user_count = User.query.count()
-    for i in range(user_count):
-        user = User.query.offset(i).first()
-        specialData = SpecialData(
-            owner=user,
-            owner_id=user.id,
-            headuri="wwww.orzt.top",
-            bguri="www.orzt.top",
-            tags="Interesting",
+def __extrainfo():
+    faker = Faker("zh_CN")
+    for user in User.query.all():
+        print(user)
+        # extrainfo
+        extrainfo = ExtraInfo(
+            user_id=user.user_id,
+            birth=faker.date_this_century(),
+            about_me=faker.sentence(),
         )
-        db.session.add(specialData)
-    db.session.commit()
-
-def texts(count=10):
-    print("ssssss")
-
-def pictures(count=10):
-    pass
+        user.extrainfo = extrainfo
+        db.session.add(user)
+        db.session.commit()
+        # some records
+        for i in range(randint(1, 3)):
+            record = Record(
+                user_id=user.user_id,
+                where=faker.address(),
+                content=faker.sentence(),
+            )
+            db.session.add(record)
+        db.session.commit()
+        # some pictures
+    
