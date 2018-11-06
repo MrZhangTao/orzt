@@ -14,3 +14,4 @@ Werkzeug
 faker
 Flask-RESTful
 
+flask_script

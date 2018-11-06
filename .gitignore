@@ -1,3 +1,7 @@
 readme.md
+/backend/__pycache__/
+*\.py[cod]
 .DS_Store
 virtual
+
+migrations/

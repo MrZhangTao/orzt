@@ -27,7 +27,13 @@ class User(db.Model):
     last_logined = db.Column(db.DateTime(),
                              default=datetime.utcnow, nullable=False)
 
-    extrainfo = db.relationship("ExtraInfo", uselist=False)
+    # one to one
+    # uselist 标志指示在关系的“多”侧放置标量属性而不是集合
+    # the uselist flag indicates the placement of a scalar attribute
+    # instead of a collection on the “many” side of the relationship.
+    # To convert one-to-many into one-to-one
+    extrainfo = db.relationship("ExtraInfo", backref=db.backref("user", uselist=False), uselist=False)
+    # ont to many
     records = db.relationship("Record", backref="user", lazy="dynamic")
     pictures = db.relationship("Picture", backref="user", lazy="dynamic")
 
@@ -95,7 +101,6 @@ class ExtraInfo(db.Model):
     bguri = db.Column(db.String(128), default="")
     tags = db.Column(db.String(128), default="")
     about_me = db.Column(db.String(512), default="")
-    user = db.relationship("User", uselist=False)
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
