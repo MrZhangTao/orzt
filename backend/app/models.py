@@ -55,8 +55,8 @@ class User(db.Model):
             "username": self.username,
             "sex": self.sex,
             "location": self.location,
-            "register_time": self.register_time,
-            "last_logined": self.last_logined,
+            "register_time": str(self.register_time),
+            "last_logined": str(self.last_logined),
             "extrainfo": extrainfo,
         }
 
@@ -79,7 +79,8 @@ class User(db.Model):
         s = Serializer(current_app.config["SECRET_KEY"], expiration)
         return s.dumps({"user_id": self.user_id})
 
-    def verify_auth_token(self, token):
+    @staticmethod
+    def verify_auth_token(token):
         s = Serializer(current_app.config["SECRET_KEY"])
         try:
             data = s.loads(token)
@@ -114,7 +115,7 @@ class ExtraInfo(db.Model):
         return {
             "info_id": self.info_id,
             "user_id": self.user_id,
-            "birth": self.birth,
+            "birth": str(self.birth),
             "lefttime": self.lefttime,
             "headuri": self.headuri,
             "bguri": self.bguri,
@@ -145,7 +146,7 @@ class Record(db.Model):
         return {
             "record_id": self.record_id,
             "user_id": self.user_id,
-            "create_time": self.create_time,
+            "create_time": str(self.create_time),
             "where": self.where,
             "content": self.content,
             "texturi": self.texturi,
@@ -170,7 +171,7 @@ class Picture(db.Model):
         return {
             "pic_id": self.pic_id,
             "user_id": self.user_id,
-            "create_time": self.create_time,
+            "create_time": str(self.create_time),
             "uri": self.uri,
             "tags": self.tags
         }

@@ -13,6 +13,7 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     ENV = "development"
+    USERSCOUNTPERPAGE = 5
     #数据库配置
     CHOSQL = "mysql"
     DRIVER = "+pymysql"
@@ -22,7 +23,6 @@ class DevelopmentConfig(Config):
     PORT = "3306"
     DATABASE = "orzt"
     dburi = "{}{}://{}:{}@{}:{}/{}".format(CHOSQL, DRIVER, USERNAME, PASSWORD, HOSTNAME, PORT, DATABASE)
-
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DEV_DATABASE_URL", dburi)
     # 定义一个字典用于保存错误码以及错误信息
