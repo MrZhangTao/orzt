@@ -25,7 +25,7 @@ class DevelopmentConfig(Config):
     dburi = "{}{}://{}:{}@{}:{}/{}".format(CHOSQL, DRIVER, USERNAME, PASSWORD, HOSTNAME, PORT, DATABASE)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DEV_DATABASE_URL", dburi)
-    # 定义一个字典用于保存错误码以及错误信息
+    # 定义一个字典用于保存自定义错误码以及错误信息，在API中使用
     errorDict = {
         "401": "Unauthorized Access!",
         "404": "Sorry, Not Found!!!!!"

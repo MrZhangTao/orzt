@@ -119,7 +119,8 @@ class ExtraInfo(db.Model):
             "lefttime": self.lefttime,
             "headuri": self.headuri,
             "bguri": self.bguri,
-            "tags": self.tags
+            "tags": self.tags,
+            "about_me": self.about_me
         }
 
 

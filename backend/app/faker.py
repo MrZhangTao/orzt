@@ -31,7 +31,6 @@ def users(count=10):
 def __extrainfo():
     faker = Faker("zh_CN")
     for user in User.query.all():
-        print(user)
         # extrainfo
         extrainfo = ExtraInfo(
             user_id=user.user_id,
