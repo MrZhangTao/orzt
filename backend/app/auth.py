@@ -17,7 +17,7 @@ def verify_password(phone_or_token, password):
     if phone_or_token == "":
         return False
     # first try to authenticate by token
-    user = User.verify_auth_token(phone_or_token)
+    user = User.analyse_auth_token(phone_or_token)
     if not user:
         # try to authenticate with telephone/password
         user = User.query.filter_by(telephone=phone_or_token).first()

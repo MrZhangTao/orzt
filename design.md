@@ -1,6 +1,6 @@
 这是一个微信小程序项目——跪了吧(很随意的名字吗？)
 主要的目的是:
-        1.不经意间的想法、创意(转瞬即逝)，喜欢的句子段落，偶尔兴起写一则日记  (限字数)(可以配图)，
+        1.不经意间的想法、创意(转瞬即逝)，喜欢的句子段落(可以配图)，
         2.存放自己的图片(现在的手机存储的大部分东西吧)，
 人并不能将人生中所有有意义开心伤心的事都记忆下来，蓦然回首，尔可解彼时心情乎？
 
@@ -22,8 +22,8 @@
                 数据id， 用户id，   生日，  预估寿命，  头像uri，标签集，背景图片uri，关于自己
                 info_id, user_id, birth, lifetime， headuri, tags, bguri， about_me
         记录表：
-                    时间，      用户id， 记录id， 标签集，  内容   大内容uri， 配图uri， 发表地点
-                create_time, user_id, record_id, tags, content， texturi, picuri， where
+                    时间，      用户id， 记录id， 标签集，  内容  ， 配图uri， 发表地点
+                create_time, user_id, record_id, tags, content， picuri， where
         图片表：
                 时间，     用户id，图片id，图片uri，标签集
                 create_time, user_id，pic_id,  uri，   tags

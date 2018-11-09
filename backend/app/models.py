@@ -75,12 +75,30 @@ class User(db.Model):
         self.last_logined = datetime.utcnow()
         db.session.add(self)
 
+    def generate_authrefresh_token(self, expiration=3600):
+        s = Serializer(current_app.config["SECRET_KEY"], expiration)
+        return s.dumps({"user_id": self.user_id}).decode("utf-8")
+    
+    @staticmethod
+    def analyse_authrefresh_token(retoken):
+        s = Serializer(current_app.config["SECRET_KEY"])
+        try:
+            data = s.loads(retoken)
+        except SignatureExpired as e:
+            return None # valid retoken, but expired
+        except BadSignature as e:
+            return None # invalid token
+        user = User.query.get(data["user_id"])
+        return user
+    # 字节 解码为 字符串
+    # 字符串 编码为 字节
+    # 解码编码方式有 ascii utf-8 gbk等
     def generate_auth_token(self, expiration=600):
         s = Serializer(current_app.config["SECRET_KEY"], expiration)
-        return s.dumps({"user_id": self.user_id})
+        return s.dumps({"user_id": self.user_id}).decode("utf-8") # 使用utf-8将byte字节解码为字符串
 
     @staticmethod
-    def verify_auth_token(token):
+    def analyse_auth_token(token):
         s = Serializer(current_app.config["SECRET_KEY"])
         try:
             data = s.loads(token)
@@ -101,7 +119,7 @@ class ExtraInfo(db.Model):
     headuri = db.Column(db.String(128), default="")
     bguri = db.Column(db.String(128), default="")
     tags = db.Column(db.String(128), default="")
-    about_me = db.Column(db.String(512), default="")
+    about_me = db.Column(db.String(128), default="")
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -130,11 +148,10 @@ class Record(db.Model):
     record_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
-    where = db.Column(db.String(256), default="")
+    where = db.Column(db.String(64), default="")
     content = db.Column(db.String(256), default="")
-    texturi = db.Column(db.String(128), default="")
     pic_uri = db.Column(db.String(128), default="")
-    tags = db.Column(db.String(128), default="")
+    tags = db.Column(db.String(64), default="")
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -150,7 +167,6 @@ class Record(db.Model):
             "create_time": str(self.create_time),
             "where": self.where,
             "content": self.content,
-            "texturi": self.texturi,
             "pic_uri": self.pic_uri,
             "tags": self.tags,
         }

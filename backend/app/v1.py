@@ -8,9 +8,12 @@ from . import db
 from datetime import datetime
 import math
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func, or_, and_
+from werkzeug.utils import secure_filename
+import os
 
 operaTypeEnums = ["lt", "rt"]
-
+url_prefix = "/api/v1"
 
 # 不积跬步无以至千里
 
@@ -22,6 +25,13 @@ def formattedResponse(data, status_code=200, status_msg="OK"):
         "data": data
     }
 
+def saveImg():
+    '''保存图片'''
+    pass
+
+def allowed_file(filename):
+    '''for a given file, return if it is an allowed type'''
+    return "." in filename and filename.rsplit(".", 1)[1] in current_app.config["ALLOWED_EXTENSIONS"]
 # 字段合法验证函数
 
 def isPhoneValid(telephone):
@@ -40,9 +50,48 @@ def isCityValid(cityname):
     '''城市合法性检验'''
     return True
 
+class Tokens(Resource):
+    uri = url_prefix + "/tokens"
+    endpoint = url_prefix + "/tokens"
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.reqparser = reqparse.RequestParser()
+        self.reqparser.add_argument("telephone", type=str, location="json")
+        self.reqparser.add_argument("password", type=str, location="json")
+
+    def post(self):
+        '''登录功能'''
+        args = self.reqparser.parse_args()
+        telephone = args.get("telephone")
+        password = args.get("password")
+        if telephone is None or password is None:
+            return formattedResponse({}, 400, "telephone or password is needed!")
+        if not isPhoneValid(telephone) or not isPasswordValid(password):
+            return formattedResponse({}, 400, "telephone or password is invaild!")
+        user = User.query.filter_by(telephone=telephone).first()
+        if user is None or not user.verify_password(password):
+            return formattedResponse({}, 400, "telephone or password is wrong!")
+        
+        expiration = 600  # 10分钟
+        refreshExpiration = 3600 # 1个小时
+        token = user.generate_auth_token(expiration)
+        # 令牌过期时 用于更新令牌的 令牌
+        refrehToken = user.generate_authrefresh_token(refreshExpiration)
+        # print(user.user_id, telephone, token, refrehToken)
+        return formattedResponse({
+            "user_id": user.user_id,
+            "telephone": telephone,
+            "expiration": expiration,
+            "token": token,
+            "refreshToken": refrehToken,
+            "refreshExpiration": refreshExpiration
+        })
+
+
 class Users(Resource):
-    uri = "/api/v1/users"
-    endpoint = "/api/v1/users"
+    uri = url_prefix + "/users"
+    endpoint = url_prefix + "/users"
     decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
@@ -57,18 +106,17 @@ class Users(Resource):
         # print(args) # {'page': None} 
         # print("page" in args) # True
         if args.get("page") is None:
-            userdatas = User.query.order_by(User.register_time.desc()).all()
+            userdatas = User.query.order_by(User.register_time).all()
         else:
             usercount = User.query.count()
             countunit = current_app.config["USERSCOUNTPERPAGE"]
             page = max(1, min(int(args.get("page")), math.ceil(usercount / countunit))) # 将page的下限设为1
-            userdatas = User.query.order_by(User.register_time.desc()).offset(countunit * (page - 1)).limit(countunit)
+            userdatas = User.query.order_by(User.register_time).offset(countunit * (page - 1)).limit(countunit)
         return formattedResponse([userdata.to_json() for userdata in userdatas])
         
-
 class NewUser(Resource):
-    uri = "/api/v1/newusers"
-    endpoint = "/api/v1/newusers"
+    uri = url_prefix + "/newusers"
+    endpoint = url_prefix + "/newusers"
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -139,8 +187,8 @@ class NewUser(Resource):
         
 
 class Introduction(Resource):
-    uri = "/api/v1/users/<int:user_id>/intro"
-    endpoint = "/api/v1/users/<int:user_id>/intro"
+    uri = url_prefix + "/users/<int:user_id>/intro"
+    endpoint = url_prefix + "/users/<int:user_id>/intro"
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -217,8 +265,8 @@ class Introduction(Resource):
 
 
 class ExtraIntro(Resource):
-    uri = "/api/v1/users/<int:user_id>/extraintro"
-    endpoint = "/api/v1/users/<int:user_id>/extraintro"
+    uri = url_prefix + "/users/<int:user_id>/extraintro"
+    endpoint = url_prefix + "/users/<int:user_id>/extraintro"
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -307,9 +355,96 @@ class ExtraIntro(Resource):
             return formattedResponse({"extrainfo": user.extrainfo.to_json()})
 
         
-
-
-
-
+class Records(Resource):
+    '''记录'''
+    uri = url_prefix + "/users/<int:user_id>/records"
+    endpoint = url_prefix + "/users/<int:user_id>/records"
+    decorators=[auth.login_required]
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.reqparser = reqparse.RequestParser()
+        # post请求需要的参数
+        self.reqparser.add_argument("where", type=str, location="json")
+        self.reqparser.add_argument("content", type=str, location="json")
+        self.reqparser.add_argument("pic_uri", type=str, location="json")
+        self.reqparser.add_argument("tags", type=str, location="json")
 
         
+
+    def get(self, user_id):
+        '''获取记录'''
+        user = User.query.get(user_id)
+        if user is None:
+            return formattedResponse({}, 400, "this user does not exist!")
+        # 倒序查询
+        records = Record.query.filter_by(user_id=user_id).order_by(Record.create_time.desc()).all()
+        return formattedResponse({
+            "records": [record.to_json() for record in records]
+        })
+
+    def post(self, user_id):
+        '''发表记录'''
+        args = self.reqparser.parse_args()
+        where = args.get("where")
+        content = args.get("content")
+        pic_uri = args.get("pic_uri")
+        tags = args.get("tags")
+
+        user = User.query.get(user_id)
+        if user is None:
+            return formattedResponse({}, 400, "this user does not exist!")
+
+        # 参数检查
+        # need to do
+
+        record = Record(
+            user_id=user_id,
+            where=where,
+            content=content,
+            pic_uri=pic_uri,
+            tags=tags
+        )
+        db.session.add(record)
+        db.session.commit()
+        return formattedResponse({"record": record.to_json()})
+
+        
+class OneRecord(Resource):
+    '''记录'''
+    uri = url_prefix + "/users/<int:user_id>/records/<int:record_id>"
+    endpoint = url_prefix + "/users/<int:user_id>/records/<int:record_id>"
+    decorators = [auth.login_required]
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+
+    def delete(self, user_id, record_id):
+        '''删除记录'''
+        print(record_id, user_id)
+        record = Record.query.filter(and_(Record.record_id==record_id, Record.user_id==user_id)).first()
+        if not record:
+            return formattedResponse({}, 400, "record does not exist!")
+        db.session.delete(record)
+        db.session.commit()
+        return formattedResponse({})
+
+
+class Resources(Resource):
+    '''图片'''
+    uri = "/orzt/resources"
+    endpoint = "/orzt/resources"
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+
+    def post(self):
+        '''上传(很基础的上传)'''
+        upload_file = request.files["orzt_image"]
+        if upload_file and allowed_file(upload_file.filename):
+            filename = secure_filename(upload_file.filename)
+            upload_file.save(os.path.join(current_app.root_path,
+                                          current_app.config["UPLOAD_FOLDER"], filename))
+            return formattedResponse({})
+        else:
+            return formattedResponse({}, 400, "upload failed!")
+

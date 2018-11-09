@@ -24,15 +24,25 @@ def create_app(configname):
     api = Api(app)
     from . import v1
     # add_resource 函数使用指定的endpoint注册路由到框架上，如果没有指定端点，flask-restful会根据类名生成一个
-    api.add_resource(v1.Users, v1.Users.uri, endpoint=v1.Users.endpoint)
-    api.add_resource(v1.NewUser, v1.NewUser.uri, endpoint=v1.NewUser.endpoint)
-    api.add_resource(v1.Introduction, v1.Introduction.uri, endpoint=v1.Introduction.endpoint)
-    api.add_resource(v1.ExtraIntro, v1.ExtraIntro.uri, endpoint=v1.ExtraIntro.endpoint)
-    from .auth import auth
+    api.add_resource(v1.Users, v1.Users.uri, 
+                     endpoint=v1.Users.endpoint)
+    api.add_resource(v1.NewUser, v1.NewUser.uri,
+                     endpoint=v1.NewUser.endpoint)
+    api.add_resource(v1.Introduction, v1.Introduction.uri, 
+                     endpoint=v1.Introduction.endpoint)
+    api.add_resource(v1.ExtraIntro, v1.ExtraIntro.uri, 
+                     endpoint=v1.ExtraIntro.endpoint)
+    api.add_resource(v1.Tokens, v1.Tokens.uri,
+                     endpoint=v1.Tokens.endpoint)
+    api.add_resource(v1.Records, v1.Records.uri,
+                     endpoint=v1.Records.endpoint)
+    api.add_resource(v1.OneRecord, v1.OneRecord.uri,
+                     endpoint=v1.OneRecord.endpoint)
+    api.add_resource(v1.Resources, v1.Resources.uri,
+                     endpoint=v1.Resources.endpoint)
 
     # 每次请求前进行安全验证
     @app.before_request
-    # @auth.login_required
     def before_request():
         print("HelloWorld")
     

@@ -30,6 +30,8 @@ class DevelopmentConfig(Config):
         "401": "Unauthorized Access!",
         "404": "Sorry, Not Found!!!!!"
     }
+    ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+    UPLOAD_FOLDER = "resources/"
 
 class ProductConfig(Config):
     DEBUG = False
