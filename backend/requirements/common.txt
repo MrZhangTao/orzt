@@ -15,3 +15,5 @@ faker
 Flask-RESTful
 
 flask_script
+flask_jwt
+flask_sslify
