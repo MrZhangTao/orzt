@@ -40,6 +40,8 @@ def create_app(configname):
                      endpoint=v1.OneRecord.endpoint)
     api.add_resource(v1.Resources, v1.Resources.uri,
                      endpoint=v1.Resources.endpoint)
+    api.add_resource(v1.OneResource, v1.OneResource.uri,
+                     endpoint=v1.OneResource.endpoint)
 
     # 每次请求前进行安全验证
     @app.before_request

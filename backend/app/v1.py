@@ -1,4 +1,4 @@
-from flask import Flask, abort, url_for, request, jsonify, g, current_app, make_response
+from flask import Flask, abort, url_for, request, jsonify, g, current_app, make_response, send_from_directory
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, SignatureExpired, BadSignature
 from flask_restful import Api, Resource, reqparse
 from .models import User, ExtraInfo, Record, Picture
@@ -189,6 +189,7 @@ class NewUser(Resource):
 class Introduction(Resource):
     uri = url_prefix + "/users/<int:user_id>/intro"
     endpoint = url_prefix + "/users/<int:user_id>/intro"
+    decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -205,7 +206,6 @@ class Introduction(Resource):
             return formattedResponse({}, 400, "Here the user does not exist!")
         return formattedResponse({"introduction": user.to_json()})
     
-    @auth.login_required
     def post(self, user_id):
         '''修改玩家数据'''
         args = self.reqparser.parse_args()  # get passed args
@@ -267,6 +267,7 @@ class Introduction(Resource):
 class ExtraIntro(Resource):
     uri = url_prefix + "/users/<int:user_id>/extraintro"
     endpoint = url_prefix + "/users/<int:user_id>/extraintro"
+    decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -360,6 +361,7 @@ class Records(Resource):
     uri = url_prefix + "/users/<int:user_id>/records"
     endpoint = url_prefix + "/users/<int:user_id>/records"
     decorators=[auth.login_required]
+    
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.reqparser = reqparse.RequestParser()
@@ -447,4 +449,21 @@ class Resources(Resource):
             return formattedResponse({})
         else:
             return formattedResponse({}, 400, "upload failed!")
+    
+class OneResource(Resource):
+    '''下载图片'''
+    uri = "/orzt/resources/<path:filename>"
+    endpoint = "/orzt/resources/<path:filename>"
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+
+    def get(self, filename):
+        dirpath = os.path.join(current_app.root_path,
+                               current_app.config["UPLOAD_FOLDER"])
+        if os.path.exists(os.path.join(dirpath, filename)):
+            return send_from_directory(dirpath, filename, as_attachment=True)
+        else:
+            return formattedResponse({}, 400, "download failed!")
+
 
