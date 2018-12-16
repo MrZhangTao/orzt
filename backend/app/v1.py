@@ -3,7 +3,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, Signatur
 from flask_restful import Api, Resource, reqparse
 from .models import User, ExtraInfo, Record, Picture
 import functools
-from .auth import auth
+from .auth import auth, isAdministration
 from . import db
 from datetime import datetime
 import math
@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, or_, and_
 from werkzeug.utils import secure_filename
 import os
+from functools import wraps
 
 operaTypeEnums = ["lt", "rt"]
 url_prefix = "/api/v1"
@@ -25,12 +26,8 @@ def formattedResponse(data, status_code=200, status_msg="OK"):
         "data": data
     }
 
-def saveImg():
-    '''保存图片'''
-    pass
-
 def allowed_file(filename):
-    '''for a given file, return if it is an allowed type'''
+    '''验证文件扩展名是否符合要求'''
     return "." in filename and filename.rsplit(".", 1)[1] in current_app.config["ALLOWED_EXTENSIONS"]
 # 字段合法验证函数
 
@@ -51,6 +48,7 @@ def isCityValid(cityname):
     return True
 
 class Tokens(Resource):
+    '''登录功能'''
     uri = url_prefix + "/tokens"
     endpoint = url_prefix + "/tokens"
 
@@ -90,6 +88,7 @@ class Tokens(Resource):
 
 
 class Users(Resource):
+    '''用户数据'''
     uri = url_prefix + "/users"
     endpoint = url_prefix + "/users"
     decorators = [auth.login_required]
@@ -102,6 +101,8 @@ class Users(Resource):
 
     def get(self):
         '''获取用户数据列表'''
+        if not isAdministration(g.user): # 非管理员
+            return formattedResponse({}, 401, "You have no relational power!")
         args = self.reqparser.parse_args() # get passed args
         # print(args) # {'page': None} 
         # print("page" in args) # True
@@ -115,6 +116,7 @@ class Users(Resource):
         return formattedResponse([userdata.to_json() for userdata in userdatas])
         
 class NewUser(Resource):
+    '''新用户注册'''
     uri = url_prefix + "/newusers"
     endpoint = url_prefix + "/newusers"
 
@@ -187,8 +189,9 @@ class NewUser(Resource):
         
 
 class Introduction(Resource):
-    uri = url_prefix + "/users/<int:user_id>/intro"
-    endpoint = url_prefix + "/users/<int:user_id>/intro"
+    '''某一位用户个人信息:获取、更新'''
+    uri = url_prefix + "/users/<string:user_id>/intro"
+    endpoint = url_prefix + "/users/<string:user_id>/intro"
     decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
@@ -204,16 +207,19 @@ class Introduction(Resource):
         user = User.query.filter_by(user_id=user_id).first()
         if user is None:
             return formattedResponse({}, 400, "Here the user does not exist!")
+        if user != g.user and not isAdministration(g.user):
+            return formattedResponse({}, 400, "request refused!")
         return formattedResponse({"introduction": user.to_json()})
     
     def post(self, user_id):
         '''修改玩家数据'''
         args = self.reqparser.parse_args()  # get passed args
-
         password = args.get("password")
         user = User.query.filter_by(user_id=user_id).first()
         if password is None or user is None or not isPasswordValid(password):
             return formattedResponse({}, 400, "password is invalid!")
+        if user != g.user and not isAdministration(g.user):
+            return formattedResponse({}, 400, "request refused!")
         if args.get("oldpassword") is None:  # 不改密码
             # 首先验证密码是否正确
             if not user.verify_password(password):
@@ -265,8 +271,9 @@ class Introduction(Resource):
 
 
 class ExtraIntro(Resource):
-    uri = url_prefix + "/users/<int:user_id>/extraintro"
-    endpoint = url_prefix + "/users/<int:user_id>/extraintro"
+    '''用户额外数据：获取、更新'''
+    uri = url_prefix + "/users/<string:user_id>/extraintro"
+    endpoint = url_prefix + "/users/<string:user_id>/extraintro"
     decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
@@ -297,9 +304,9 @@ class ExtraIntro(Resource):
 
     def post(self, user_id):
         '''更新额外数据'''
-        userexists, user = self.get(user_id, True)
+        userexists, userordata = self.get(user_id, True)
         if not userexists:
-            return user
+            return userordata
         
         args = self.reqparser.parse_args()
         # 取出参数
@@ -318,7 +325,7 @@ class ExtraIntro(Resource):
                 birth = None
             else:
                 needModify += 1
-                user.extrainfo.birth = birth
+                userordata.extrainfo.birth = birth
         
         if lefttime is not None:
             # 验证预期寿命是否小于当前年龄
@@ -326,15 +333,15 @@ class ExtraIntro(Resource):
                 lefttime = None
             else:
                 needModify += 1
-                user.extrainfo.lefttime = lefttime
+                userordata.extrainfo.lefttime = lefttime
         
         if headuri is not None:
             needModify += 1
-            user.extrainfo.headuri = headuri
+            userordata.extrainfo.headuri = headuri
 
         if bguri is not None:
             needModify += 1
-            user.extrainfo.bguri = headuri
+            userordata.extrainfo.bguri = headuri
 
         if tags is not None:
             # 验证标签集是否合法
@@ -342,24 +349,24 @@ class ExtraIntro(Resource):
                 tags = None
             else:
                 needModify += 1
-                user.extrainfo.tags = tags
+                userordata.extrainfo.tags = tags
 
         if about_me is not None:
             needModify += 1
-            user.extrainfo.about_me = about_me
+            userordata.extrainfo.about_me = about_me
 
         if needModify == 0: # 无变动
             db.session.rollback()
             return formattedResponse({}, 400, "extraintro passed is same as before!")
         else:
             db.session.commit()
-            return formattedResponse({"extrainfo": user.extrainfo.to_json()})
+            return formattedResponse({"extrainfo": userordata.extrainfo.to_json()})
 
         
 class Records(Resource):
-    '''记录'''
-    uri = url_prefix + "/users/<int:user_id>/records"
-    endpoint = url_prefix + "/users/<int:user_id>/records"
+    '''记录:获取、发表(一旦发表，无法再更新)'''
+    uri = url_prefix + "/users/<string:user_id>/records"
+    endpoint = url_prefix + "/users/<string:user_id>/records"
     decorators=[auth.login_required]
     
     def __init__(self, *args, **kw):
@@ -395,7 +402,8 @@ class Records(Resource):
         user = User.query.get(user_id)
         if user is None:
             return formattedResponse({}, 400, "this user does not exist!")
-
+        if user != g.user and not isAdministration(g.user):
+            return formattedResponse({}, 400, "request refused!")
         # 参数检查
         # need to do
 
@@ -413,8 +421,8 @@ class Records(Resource):
         
 class OneRecord(Resource):
     '''记录'''
-    uri = url_prefix + "/users/<int:user_id>/records/<int:record_id>"
-    endpoint = url_prefix + "/users/<int:user_id>/records/<int:record_id>"
+    uri = url_prefix + "/users/<string:user_id>/records/<int:record_id>"
+    endpoint = url_prefix + "/users/<string:user_id>/records/<int:record_id>"
     decorators = [auth.login_required]
 
     def __init__(self, *args, **kw):
@@ -422,7 +430,12 @@ class OneRecord(Resource):
 
     def delete(self, user_id, record_id):
         '''删除记录'''
-        print(record_id, user_id)
+        user = User.query.get(user_id)
+        if user is None:
+            return formattedResponse({}, 400, "this user does not exist!")
+
+        if user != g.user and not isAdministration(g.user):
+            return formattedResponse({}, 400, "request refused!")
         record = Record.query.filter(and_(Record.record_id==record_id, Record.user_id==user_id)).first()
         if not record:
             return formattedResponse({}, 400, "record does not exist!")
@@ -461,6 +474,7 @@ class OneResource(Resource):
     def get(self, filename):
         dirpath = os.path.join(current_app.root_path,
                                current_app.config["UPLOAD_FOLDER"])
+        print(os.path.join(dirpath, filename))
         if os.path.exists(os.path.join(dirpath, filename)):
             return send_from_directory(dirpath, filename, as_attachment=True)
         else:

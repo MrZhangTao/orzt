@@ -5,6 +5,11 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired, BadSignature
 from flask import current_app, request, url_for
 from . import db
+from enum import Enum
+import uuid
+
+# AdHelper权限仅低于Administration
+PowerType = Enum("Power", ("Anonymous", "Normal", "Vip", "AdHelper", "Administration"))
 
 # sqlalchemy库中声明了orm支持的列类型
 # 可以通过sqlalchemy的实例db来使用(这是一种方式)
@@ -15,7 +20,8 @@ from . import db
 class User(db.Model):
     __tablename__ = "users"
 
-    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.String(64), primary_key=True)
+    power = db.Column(db.Enum(PowerType))
     telephone = db.Column(db.String(11), unique=True, index=True)
     password_hash = db.Column(db.String(128))
     username = db.Column(db.String(64), nullable=False)
@@ -50,7 +56,8 @@ class User(db.Model):
             extrainfo = self.extrainfo.to_json()
 
         return {
-            "user_id": self.user_id,
+            "user_id": str(self.user_id),
+            "power": self.power.name,
             "telephone": self.telephone,
             "username": self.username,
             "sex": self.sex,
@@ -113,7 +120,7 @@ class ExtraInfo(db.Model):
     __tablename__ = "extrainfos"
 
     info_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey("users.user_id"), nullable=False)
     birth = db.Column(db.DateTime())
     lefttime = db.Column(db.Integer, default=77)
     headuri = db.Column(db.String(128), default="")
@@ -132,7 +139,7 @@ class ExtraInfo(db.Model):
         '''transform'''
         return {
             "info_id": self.info_id,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id),
             "birth": str(self.birth),
             "lefttime": self.lefttime,
             "headuri": self.headuri,
@@ -146,7 +153,7 @@ class Record(db.Model):
     __tablename__ = "records"
 
     record_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey("users.user_id"), nullable=False)
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
     where = db.Column(db.String(64), default="")
     content = db.Column(db.String(256), default="")
@@ -163,7 +170,7 @@ class Record(db.Model):
         '''transform'''
         return {
             "record_id": self.record_id,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id),
             "create_time": str(self.create_time),
             "where": self.where,
             "content": self.content,
@@ -175,7 +182,7 @@ class Picture(db.Model):
     __tablename__ = "pictures"
 
     pic_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey("users.user_id"), nullable=False)
     create_time = db.Column(db.DateTime(), default=datetime.utcnow)
     uri = db.Column(db.String(128), default="")
     tags = db.Column(db.String(128), default="")
@@ -187,7 +194,7 @@ class Picture(db.Model):
         '''transform'''
         return {
             "pic_id": self.pic_id,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id),
             "create_time": str(self.create_time),
             "uri": self.uri,
             "tags": self.tags

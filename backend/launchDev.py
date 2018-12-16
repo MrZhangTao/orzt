@@ -4,13 +4,11 @@ from app.models import User
 
 import os
 from app import faker
-
+app = create_app('default')
+migrate = Migrate(app, db)
 
 if __name__ == "__main__":
-    app = create_app('default')
-    migrate = Migrate(app, db)
-
-    app.app_context().push()
+    # app.app_context().push()
     # db.drop_all()
     # 一旦使用"create_all()"将模型映射到数据库中后，即使改变了模型的字段，也不会重新映射了
     # db.create_all()  # 创建表，将模型映射到数据库中

@@ -2,7 +2,8 @@ from random import randint
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
 from . import db
-from .models import User, ExtraInfo, Record, Picture
+from .models import User, ExtraInfo, Record, Picture, PowerType
+import uuid
 
 '''数据伪造'''
 def users(count=10):
@@ -17,6 +18,10 @@ def users(count=10):
             sex=randint(0, 1),
             location=faker.city_name(),
         )
+        user.user_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, user.telephone)) #UUID
+        user.power = PowerType.Normal
+        if idx == 1:
+            user.power = PowerType.Administration # 管理员
         db.session.add(user)
         try:
             db.session.commit()

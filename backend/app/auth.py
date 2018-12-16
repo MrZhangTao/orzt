@@ -1,6 +1,6 @@
 from flask import g, jsonify
 from flask_httpauth import HTTPBasicAuth
-from .models import User
+from .models import User, PowerType
 
 auth = HTTPBasicAuth()
 
@@ -30,5 +30,11 @@ def verify_password(phone_or_token, password):
 @auth.error_handler
 def auth_error():
     return errorResponse("Unauthorized Access", 401)
+
+def isAdministration(user):
+    if user.power == PowerType.Administration:
+        return True
+    else:
+        return False
 
 
